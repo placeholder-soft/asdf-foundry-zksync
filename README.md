@@ -54,4 +54,4 @@ Contributions of any kind welcome! See the [contributing guide](contributing.md)
 
 # License
 
-See [LICENSE](LICENSE) © [Zitao Xiong](https://github.com/placeholder-soft/)
+See [LICENSE](LICENSE) ©[Zitao Xiong](https://github.com/placeholder-soft/)
