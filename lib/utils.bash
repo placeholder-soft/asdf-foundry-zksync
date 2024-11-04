@@ -2,8 +2,7 @@
 
 set -euo pipefail
 
-# TODO: Ensure this is the correct GitHub homepage where releases can be downloaded for foundry-zksync.
-GH_REPO="https://github.com/placeholder-soft/foundry-zksync"
+GH_REPO="https://github.com/matter-labs/foundry-zksync"
 TOOL_NAME="foundry-zksync"
 TOOL_TEST="forge --version"
 
@@ -31,8 +30,6 @@ list_github_tags() {
 }
 
 list_all_versions() {
-	# TODO: Adapt this. By default we simply list the tag names from GitHub releases.
-	# Change this function if foundry-zksync has other means of determining installable versions.
 	list_github_tags
 }
 
@@ -40,9 +37,36 @@ download_release() {
 	local version filename url
 	version="$1"
 	filename="$2"
+	# Determine platform and architecture
+	local platform
+	local arch
+	case "$(uname -s)" in
+		"Darwin")
+			platform="darwin"
+			;;
+		"Linux")
+			platform="linux"
+			;;
+		*)
+			fail "Unsupported platform: $(uname -s)"
+			;;
+	esac
 
-	# TODO: Adapt the release URL convention for foundry-zksync
-	url="$GH_REPO/archive/v${version}.tar.gz"
+	case "$(uname -m)" in
+		"x86_64")
+			arch="amd64"
+			;;
+		"arm64"|"aarch64")
+			arch="arm64"
+			;;
+		*)
+			fail "Unsupported architecture: $(uname -m)"
+			;;
+	esac
+
+	# Construct download URL using platform and arch
+	local archive_name="foundry_nightly_${platform}_${arch}.tar.gz"
+	url="$GH_REPO/releases/download/$version/$archive_name"
 
 	echo "* Downloading $TOOL_NAME release $version..."
 	curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
@@ -61,7 +85,6 @@ install_version() {
 		mkdir -p "$install_path"
 		cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path"
 
-		# TODO: Assert foundry-zksync executable exists.
 		local tool_cmd
 		tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
 		test -x "$install_path/$tool_cmd" || fail "Expected $install_path/$tool_cmd to be executable."
