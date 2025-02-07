@@ -64,12 +64,30 @@ download_release() {
 			;;
 	esac
 
-	# Construct download URL using platform and arch
-	local archive_name="foundry_nightly_${platform}_${arch}.tar.gz"
-	url="$GH_REPO/releases/download/$version/$archive_name"
+	# Try standard version first
+	local version_no_prefix="${version#foundry-zksync-}"
+	local standard_archive="foundry_zksync_${version_no_prefix}_${platform}_${arch}.tar.gz"
+	local standard_url="$GH_REPO/releases/download/$version/$standard_archive"
 
-	echo "* Downloading $TOOL_NAME release $version..."
-	curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
+	echo "* Trying standard release download for $TOOL_NAME version $version..."
+	if curl -sIf "${standard_url}" >/dev/null 2>&1; then
+		echo "* Found standard release, downloading..."
+		curl "${curl_opts[@]}" -o "$filename" -C - "$standard_url" || fail "Could not download $standard_url"
+		return
+	fi
+
+	# If standard version fails, try nightly version
+	local nightly_archive="foundry_nightly_${platform}_${arch}.tar.gz"
+	local nightly_url="$GH_REPO/releases/download/$version/$nightly_archive"
+
+	echo "* Trying nightly release download for $TOOL_NAME version $version..."
+	if curl -sIf "${nightly_url}" >/dev/null 2>&1; then
+		echo "* Found nightly release, downloading..."
+		curl "${curl_opts[@]}" -o "$filename" -C - "$nightly_url" || fail "Could not download $nightly_url"
+		return
+	fi
+
+	fail "Could not find release for $version with either standard or nightly naming pattern"
 }
 
 install_version() {
